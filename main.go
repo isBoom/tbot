@@ -1,15 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 	"github.com/gookit/event"
+	"github.com/gorilla/websocket"
 	"net/http"
-	"strings"
 	"tbot/api"
-	"tbot/model"
 	"tbot/plugin/interaction"
 	"tbot/plugin/key"
 )
@@ -21,33 +18,21 @@ var upGrader = websocket.Upgrader{
 		return true
 	},
 }
-var PluginName=make([]string,0)
-
-//websocket实现
-func wsFunc(c *gin.Context) {
-	//升级get请求为webSocket协议
+func wsEvent(c *gin.Context) {
 	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		return
 	}
 	defer ws.Close()
-	api.Init(ws)
+	api.InitWsEvent(ws)
 	for {
 		_, message, err := ws.ReadMessage()
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
-		//if strings.Index(string(message),"message_type")!=-1 {
-		if strings.Index(string(message),"1520285660")!=-1 {
-			msg:=model.Message{}
-			if err:=json.Unmarshal(message,&msg);err!=nil{
-				fmt.Println(err)
-				continue
-			}
-			//loadPlugin()
-			fmt.Printf("%+v\n",msg)
-			event.Fire("event",event.M{"data":msg})
+		if len(string(message))>=30 && string(message)[0:12] != `{"interval":` && string(message)[0:30] != `{"meta_event_type":"lifecycle"`{
+			event.Fire("event",event.M{"data":message})
 		}
 	}
 }
@@ -55,9 +40,21 @@ func loadPlugin() {
 	event.On("event", event.ListenerFunc(key.T1), event.Normal)
 	event.On("event", event.ListenerFunc(interaction.T1), event.Normal)
 }
+
 func main() {
+	//tic:=time.NewTicker(time.Second*2)
+	//go func() {
+	//	for{
+	//		t:= <- tic.C
+	//		tic.Stop()
+	//		fmt.Println(t)
+	//	}
+	//}()
+	//
+	//tic.Reset(time.Second*10)
+	//time.Sleep(time.Second*1000)
 	loadPlugin()
 	r := gin.Default()
-	r.GET("/ws", wsFunc)
+	r.GET("/ws", wsEvent)
 	r.Run(":8080")
 }

@@ -2,11 +2,12 @@ package api
 
 import "github.com/gorilla/websocket"
 
-var api *websocket.Conn
+var wsApi *websocket.Conn
+var wsEvent *websocket.Conn
 
-func Init(conn *websocket.Conn){
-	api = conn
+func InitWsApi(conn *websocket.Conn){
+	wsApi = conn
 }
-func GetWs() *websocket.Conn {
-	return api
+func InitWsEvent(conn *websocket.Conn){
+	wsEvent = conn
 }
