@@ -17,31 +17,16 @@ func T1(e event.Event) error{
 
 	switch msg.Message {
 	case "img":
-		api.Send_msg(&msg,"[CQ:image,file=http://xxxholic.xyz:8888/static/images/bt_logo_new.png,id=40000]")
-		if str,err:=api.GetWsEventNextReader();err!=nil{
-			fmt.Println(err)
-			return err
-		}else{
-			fmt.Println("收到cq回信"+str)
-		}
+		api.Send_msg(&msg,`[CQ:image,file=D:/Code/Go/demo/tbot/api/bs.png,id=40000]`)
+		api.GetWsEventNextReader()
 		api.Send_msg(&msg,"[CQ:face,id=178]")
-		if str,err:=api.GetWsEventNextReader();err!=nil{
-			fmt.Println(err)
-			return err
-		}else{
-			fmt.Println("收到cq回信"+str)
-		}
+		api.GetWsEventNextReader()
 	case "file":
-		if err:=api.UploadGroupFile(636471516,"/root/abcd.pdf","abcd.pdf");err!=nil{
+		if err:=api.UploadGroupFile(636471516,`C:\Users\skyti\Desktop\FOSDEM14_HPC_devroom_14_GoCUDA.pdf`,"abcd.pdf");err!=nil{
 			fmt.Println(err)
 			return err
 		}
-		if str,err:=api.GetWsEventNextReader();err!=nil{
-			fmt.Println(err)
-			return err
-		}else{
-			fmt.Println("收到cq回信"+str)
-		}
+		api.GetWsEventNextReader()
 	}
 	return nil
 }

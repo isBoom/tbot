@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"runtime"
 	"strings"
 	"tbot/api"
 	"tbot/model"
@@ -47,19 +48,21 @@ func init(){
 	json = jsoniter.ConfigCompatibleWithStandardLibrary
 }
 func enter(msg *model.GroupMessage) error {
-	if err:=api.Send_msg(msg,"请在一定时间内发送pdf文件,并回复over进行合并");err!=nil{
+	if err:=api.Send_msg(msg,"请在一定时间内发送pdf文件\n待机器人回复完!每!一!个!收到文件后\n回复over进行合并\n若提前发送over可能导致失败。");err!=nil{
 		return err
 	}
 	if userMap == nil{
 		userMap = make(map[int]*userInfo,0)
 	}
 	eP,_:=os.Getwd()
+	//兼容win
+	eP = strings.Replace(eP,`\`,`/`,-1)
 	u:=userInfo{
 		Stage:   1,
 		GroupId: msg.GroupID,
 		Tic:     time.NewTicker(ticTime),
 		FileNames: make([]string,0),
-		Path: fmt.Sprintf("%s/pdfFile/%d-%d-%v",eP,msg.UserID,msg.GroupID,time.Now().UTC().Format("2006-01-02_15-04-05")),
+		Path: fmt.Sprintf("%s/pdfFile/%d-%d-%v",eP,msg.UserID,msg.GroupID,time.Now().Format("2006-01-02_15-04-05")),
 	}
 	userMap[msg.UserID] = &u
 
@@ -70,7 +73,7 @@ func enter(msg *model.GroupMessage) error {
 		if len(userMap)==0{
 			userMap = nil
 		}
-		api.Send_msg(msg,"交互结束!")
+		time.Sleep(time.Second*60)
 		os.RemoveAll(path)
 	}(userMap[msg.UserID].Path)
 	return nil
@@ -91,17 +94,20 @@ func T1(e event.Event) (err error) {
 		gf:=&groupFile{}
 		//发送文件阶段或者发送pdf完毕阶段
 		if err=json.Unmarshal(e.Data()["data"].([]byte),&msg);err==nil && (msg.Message == "over") && msg.MessageType == GROUP {
-			fmt.Println("开始合并")
-			if err = sendFile(msg);err!=nil{
-				return err
-			}
-			userMap[msg.UserID].Tic.Reset(0)
+			go func() {
+				if err = sendFile(msg);err!=nil{return}
+				userMap[msg.UserID].Tic.Reset(0)
+			}()
 		}else if err=json.Unmarshal(e.Data()["data"].([]byte),gf);err == nil{
 			if userMap[gf.UserID].GroupId == gf.GroupID {
-				if err = getFile(gf);err!=nil{
-					return err
-				}
-				api.Send_msg(msg,fmt.Sprintf("文件%s接收成功",gf.File.Name))
+				if len(gf.File.Name)<=3{return fmt.Errorf("文件异常")}
+				if err = api.Send_group_msg(gf.GroupID,fmt.Sprintf("正在接收文件%s",gf.File.Name));err!=nil{fmt.Println(err)}
+				go func() {
+					if err = getFile(gf);err!=nil{
+						return
+					}
+					if err = api.Send_group_msg(gf.GroupID,fmt.Sprintf("文件%s接收成功",gf.File.Name));err!=nil{fmt.Println(err)}
+				}()
 			}
 		}else{
 			return err
@@ -118,9 +124,6 @@ func T1(e event.Event) (err error) {
 }
 
 func getFile(g *groupFile) error {
-	if len(g.File.Name)<=3{
-		return fmt.Errorf("")
-	}
 	if "pdf"== strings.ToLower(g.File.Name[len(g.File.Name)-3:]){
 		fmt.Println("开始下载"+g.File.Name)
 		os.MkdirAll(userMap[g.UserID].Path,0664)
@@ -143,24 +146,24 @@ func getFile(g *groupFile) error {
 }
 
 func sendFile(m *model.GroupMessage) error {
-	fileName := fmt.Sprintf("%v",time.Now().UTC().Format("2006-01-02_15-04-05"))+".pdf"
+	fileName := fmt.Sprintf("%v",time.Now().Format("2006-01-02_15-04-05"))+".pdf"
+	fullFileName := fmt.Sprintf("%s/%s",userMap[m.UserID].Path,fileName)
 	if len(userMap[m.UserID].FileNames) == 0 {
-		api.Send_msg(m,"您还未上传文件")
+		if err := api.Send_msg(m,"您还未上传文件");err!=nil{fmt.Println(err)}
 		return fmt.Errorf("未上传")
 	}
-	if err:=api.Send_msg(m,"正在合并...");err!=nil{
-		return err
-	}
-	if err:=pdf.MergeCreateFile(userMap[m.UserID].FileNames, userMap[m.UserID].Path +"/"+ fileName, nil);err!=nil{
+	api.Send_msg(m,"正在合并...")
+	if err:=pdf.MergeCreateFile(userMap[m.UserID].FileNames, fullFileName, nil);err!=nil{
 		fmt.Println("MergeCreateFile err")
 		return err
 	}
-	if err:=api.UploadGroupFile(m.GroupID,userMap[m.UserID].Path +"/"+ fileName,fileName);err!=nil{
-		return err
+	if "windows" == runtime.GOOS{
+		fullFileName = strings.Replace(fullFileName,`/`,`\`,-1)
 	}
-	res,_:=api.GetWsEventNextReader()
-	if res != `{"data":null,"echo":"","retcode":0,"status":"ok"}`{
-		time.Sleep(time.Second*10)
+	fmt.Println("合并为:")
+	fmt.Println(fullFileName)
+	if err:=api.UploadGroupFile(m.GroupID,fullFileName,fileName);err!=nil{
+		return err
 	}
 	return nil
 }

@@ -10,7 +10,11 @@ type UploadGroupFileObj struct {
 	} `json:"params"`
 	Echo string `json:"echo"`
 }
-func UploadGroupFile(id int,filePath string,name string) error{
+func UploadGroupFile(id int,filePath string,name string,args ...string) error{
+	echo:=""
+	if len(args) == 1{
+		echo = args[0]
+	}
 	data:=&UploadGroupFileObj{
 		Action: "upload_group_file",
 		Params: struct {
@@ -23,7 +27,7 @@ func UploadGroupFile(id int,filePath string,name string) error{
 			File: filePath,
 			Name: name,
 		},
-		Echo: "",
+		Echo: echo,
 	}
 	err := wsEvent.WriteJSON(data)
 	if err != nil {

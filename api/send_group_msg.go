@@ -1,9 +1,5 @@
 package api
 
-import (
-	"tbot/model"
-)
-
 type SendGroupMsg struct {
 	Action string `json:"action"`
 	Params struct{
@@ -14,7 +10,7 @@ type SendGroupMsg struct {
 	Echo string `json:"echo"`
 }
 
-func Send_group_msg(u *model.GroupMessage,msg string)error{
+func Send_group_msg(id int,msg string)error{
 	data:=SendGroupMsg{
 		Action: "send_group_msg",
 		Params: struct {
@@ -22,7 +18,7 @@ func Send_group_msg(u *model.GroupMessage,msg string)error{
 			Message    string `json:"message"`
 			AutoEscape bool   `json:"auto_escape"`
 		}{
-			GroupId: u.GetId(),
+			GroupId: id,
 			Message: msg,
 			AutoEscape: false,
 		},

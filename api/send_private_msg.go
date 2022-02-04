@@ -1,9 +1,5 @@
 package api
 
-import (
-	"tbot/model"
-)
-
 type SendPrivateMsg struct {
 	Action string `json:"action"`
 	Params struct{
@@ -13,7 +9,7 @@ type SendPrivateMsg struct {
 	} `json:"params"`
 	Echo string `json:"echo"`
 }
-func Send_private_msg(u *model.GroupMessage,msg string)error{
+func Send_private_msg(id int ,msg string)error{
 	data:=SendPrivateMsg{
 		Action: "send_private_msg",
 		Params: struct {
@@ -21,7 +17,7 @@ func Send_private_msg(u *model.GroupMessage,msg string)error{
 			Message    string `json:"message"`
 			AutoEscape bool   `json:"auto_escape"`
 		}{
-			UserId: u.GetId(),
+			UserId: id,
 			Message: msg,
 			AutoEscape: false,
 		},
