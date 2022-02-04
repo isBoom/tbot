@@ -99,12 +99,12 @@ func T1(e event.Event) (err error) {
 		}else if err=json.Unmarshal(e.Data()["data"].([]byte),gf);err == nil{
 			if userMap[gf.UserID].GroupId == gf.GroupID {
 				if len(gf.File.Name)<=3{return fmt.Errorf("")}
-				if err = api.Send_group_msg(gf.GroupID,fmt.Sprintf("正在接收文件%s",gf.File.Name));err!=nil{fmt.Println(err)}
+				if err = api.Send_group_msg(gf.GroupID,fmt.Sprintf("正在接收:\n%s",gf.File.Name));err!=nil{fmt.Println(err)}
 				go func() {
 					if err = getFile(gf);err!=nil{
 						return
 					}
-					if err = api.Send_group_msg(gf.GroupID,fmt.Sprintf("文件%s接收成功",gf.File.Name));err!=nil{fmt.Println(err)}
+					if err = api.Send_group_msg(gf.GroupID,fmt.Sprintf("%s\n接收成功",gf.File.Name));err!=nil{fmt.Println(err)}
 				}()
 			}
 		}else{
