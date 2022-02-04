@@ -1,4 +1,4 @@
-tar -zxcf ../a.tar ../tbot
+tar -zcf ../a.tar ../tbot
 scp -r  ../a.tar sky:
 ssk sky "rm -rf tbot && tar -zxvf a.tar && rm -rf a.tar"
 del ../a.tar
