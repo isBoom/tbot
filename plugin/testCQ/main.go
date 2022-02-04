@@ -32,7 +32,7 @@ func T1(e event.Event) error{
 			fmt.Println("收到cq回信"+str)
 		}
 	case "file":
-		if err:=api.UploadGroupFile(636471516,"./out.pdf","new.pdf");err!=nil{
+		if err:=api.UploadGroupFile(636471516,"/root/abcd.pdf","abcd.pdf");err!=nil{
 			fmt.Println(err)
 			return err
 		}

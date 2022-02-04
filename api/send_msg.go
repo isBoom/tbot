@@ -37,6 +37,7 @@ func Send_msg(u *model.GroupMessage,msg string) error{
 	if err != nil {
 		return err
 	}
+	PrintNextreader()
 	return nil
 }
 //func Send_msg_lod(args ...interface{})error{

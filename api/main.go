@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"github.com/gorilla/websocket"
 	"io/ioutil"
 )
@@ -24,4 +25,8 @@ func GetWsEventNextReader() (string,error) {
 		return "",err
 	}
 	return string(buf),nil
+}
+func PrintNextreader(){
+	s,_:=GetWsEventNextReader()
+	fmt.Println(s)
 }

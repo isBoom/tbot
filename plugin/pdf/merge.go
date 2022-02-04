@@ -59,7 +59,7 @@ func enter(msg *model.GroupMessage) error {
 		GroupId: msg.GroupID,
 		Tic:     time.NewTicker(ticTime),
 		FileNames: make([]string,0),
-		Path: fmt.Sprintf("%s/pdfFile/%d-%d-%v",eP,msg.UserID,msg.GroupID,time.Now().UTC().Format("2006-01-02_15:04:05")),
+		Path: fmt.Sprintf("%s/pdfFile/%d-%d-%v",eP,msg.UserID,msg.GroupID,time.Now().UTC().Format("2006-01-02_15-04-05")),
 	}
 	userMap[msg.UserID] = &u
 
@@ -101,6 +101,7 @@ func T1(e event.Event) (err error) {
 				if err = getFile(gf);err!=nil{
 					return err
 				}
+				api.Send_msg(msg,fmt.Sprintf("文件%s接收成功",gf.File.Name))
 			}
 		}else{
 			return err
@@ -142,10 +143,13 @@ func getFile(g *groupFile) error {
 }
 
 func sendFile(m *model.GroupMessage) error {
-	fileName := fmt.Sprintf("%v",time.Now().UTC().Format("2006-01-02_15:04:05"))+".pdf"
+	fileName := fmt.Sprintf("%v",time.Now().UTC().Format("2006-01-02_15-04-05"))+".pdf"
 	if len(userMap[m.UserID].FileNames) == 0 {
 		api.Send_msg(m,"您还未上传文件")
 		return fmt.Errorf("未上传")
+	}
+	if err:=api.Send_msg(m,"正在合并...");err!=nil{
+		return err
 	}
 	if err:=pdf.MergeCreateFile(userMap[m.UserID].FileNames, userMap[m.UserID].Path +"/"+ fileName, nil);err!=nil{
 		fmt.Println("MergeCreateFile err")
