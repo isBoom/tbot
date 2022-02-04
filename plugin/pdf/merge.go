@@ -94,13 +94,11 @@ func T1(e event.Event) (err error) {
 		gf:=&groupFile{}
 		//发送文件阶段或者发送pdf完毕阶段
 		if err=json.Unmarshal(e.Data()["data"].([]byte),&msg);err==nil && (msg.Message == "over") && msg.MessageType == GROUP {
-			go func() {
-				if err = sendFile(msg);err!=nil{return}
-				userMap[msg.UserID].Tic.Reset(0)
-			}()
+			if err = sendFile(msg);err!=nil{return err}
+			userMap[msg.UserID].Tic.Reset(0)
 		}else if err=json.Unmarshal(e.Data()["data"].([]byte),gf);err == nil{
 			if userMap[gf.UserID].GroupId == gf.GroupID {
-				if len(gf.File.Name)<=3{return fmt.Errorf("文件异常")}
+				if len(gf.File.Name)<=3{return fmt.Errorf("")}
 				if err = api.Send_group_msg(gf.GroupID,fmt.Sprintf("正在接收文件%s",gf.File.Name));err!=nil{fmt.Println(err)}
 				go func() {
 					if err = getFile(gf);err!=nil{
@@ -141,10 +139,10 @@ func getFile(g *groupFile) error {
 			}
 		}
 		userMap[g.UserID].FileNames = append(userMap[g.UserID].FileNames, userMap[g.UserID].Path+"/"+g.File.Name)
+		fmt.Println(g.File.Name+"下载完毕")
 	}
 	return nil
 }
-
 func sendFile(m *model.GroupMessage) error {
 	fileName := fmt.Sprintf("%v",time.Now().Format("2006-01-02_15-04-05"))+".pdf"
 	fullFileName := fmt.Sprintf("%s/%s",userMap[m.UserID].Path,fileName)
