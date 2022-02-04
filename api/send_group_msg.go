@@ -24,7 +24,7 @@ func Send_group_msg(u *model.GroupMessage,msg string)error{
 		}{
 			GroupId: u.GetId(),
 			Message: msg,
-			AutoEscape: true,
+			AutoEscape: false,
 		},
 		Echo: "",
 	}

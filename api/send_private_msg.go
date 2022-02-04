@@ -23,7 +23,7 @@ func Send_private_msg(u *model.GroupMessage,msg string)error{
 		}{
 			UserId: u.GetId(),
 			Message: msg,
-			AutoEscape: true,
+			AutoEscape: false,
 		},
 		Echo: "",
 	}

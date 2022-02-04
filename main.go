@@ -9,6 +9,8 @@ import (
 	"tbot/api"
 	"tbot/plugin/interaction"
 	"tbot/plugin/key"
+	"tbot/plugin/pdf"
+	"tbot/plugin/testCQ"
 )
 
 //设置websocket
@@ -19,6 +21,7 @@ var upGrader = websocket.Upgrader{
 	},
 }
 func wsEvent(c *gin.Context) {
+	defer recover()
 	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		return
@@ -33,26 +36,20 @@ func wsEvent(c *gin.Context) {
 		}
 		if len(string(message))>=30 && string(message)[0:12] != `{"interval":` && string(message)[0:30] != `{"meta_event_type":"lifecycle"`{
 			event.Fire("event",event.M{"data":message})
+			//fmt.Println("---------------event")
+			//fmt.Println(string(message))
 		}
+
 	}
 }
 func loadPlugin() {
 	event.On("event", event.ListenerFunc(key.T1), event.Normal)
 	event.On("event", event.ListenerFunc(interaction.T1), event.Normal)
+	event.On("event", event.ListenerFunc(pdf.T1), event.Normal)
+	event.On("event", event.ListenerFunc(testCQ.T1), event.Normal)
 }
 
 func main() {
-	//tic:=time.NewTicker(time.Second*2)
-	//go func() {
-	//	for{
-	//		t:= <- tic.C
-	//		tic.Stop()
-	//		fmt.Println(t)
-	//	}
-	//}()
-	//
-	//tic.Reset(time.Second*10)
-	//time.Sleep(time.Second*1000)
 	loadPlugin()
 	r := gin.Default()
 	r.GET("/ws", wsEvent)

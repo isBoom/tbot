@@ -29,7 +29,7 @@ func Send_msg(u *model.GroupMessage,msg string) error{
 			UserId: u.GetId(),
 			GroupId: u.GetId(),
 			Message: msg,
-			AutoEscape: true,
+			AutoEscape: false,
 		},
 		Echo: "",
 	}
